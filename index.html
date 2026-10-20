@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roomwise – Predict the room type of a NYC listing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="#0e8f8a"/></svg> Roomwise</div>
+  <span class="pill" id="apiStatus">Checking API…</span>
+</header>
+
+<section class="hero">
+  <div class="hero-copy">
+    <h1>Is it a whole home, a private room or a shared bed?</h1>
+    <p>Describe a New York listing and our model will guess the room type, with a confidence score for each option.</p>
+    <a class="cta" href="#predictor">Start predicting</a>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 520 360">
+      <g class="cloud c1"><ellipse cx="90" cy="60" rx="46" ry="16" fill="#fff"/><ellipse cx="120" cy="50" rx="30" ry="16" fill="#fff"/></g>
+      <g class="cloud c2"><ellipse cx="400" cy="90" rx="40" ry="13" fill="#fff"/><ellipse cx="425" cy="80" rx="26" ry="13" fill="#fff"/></g>
+      <circle class="sun" cx="440" cy="60" r="26" fill="#ffc857"/>
+      <g fill="#cfe3ee"><rect x="30" y="170" width="60" height="150"/><rect x="100" y="130" width="50" height="190"/><rect x="390" y="150" width="60" height="170"/><rect x="455" y="190" width="45" height="130"/></g>
+      <rect x="0" y="318" width="520" height="42" fill="#bfe0d6"/>
+      <g class="house">
+        <rect x="320" y="110" width="26" height="60" fill="#14233b"/>
+        <path d="M170 170 L300 70 L430 170 Z" fill="#14233b"/>
+        <rect x="195" y="170" width="210" height="150" fill="#fff" stroke="#14233b" stroke-width="5"/>
+        <rect x="222" y="196" width="46" height="46" rx="4" class="win w1"/>
+        <rect x="332" y="196" width="46" height="46" rx="4" class="win w2"/>
+        <rect x="222" y="262" width="46" height="46" rx="4" class="win w3"/>
+        <rect x="278" y="250" width="44" height="70" rx="22 22 0 0" fill="#0e8f8a"/>
+        <circle cx="314" cy="288" r="3" fill="#ffc857"/>
+        <rect x="332" y="262" width="46" height="46" rx="4" class="win w4"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<main id="predictor" class="layout">
+  <form id="form" class="card" novalidate>
+    <h2>Describe the listing</h2>
+
+    <fieldset>
+      <legend>Where is it?</legend>
+      <div class="chips" id="boroughs" role="radiogroup" aria-label="Borough"></div>
+      <div class="grid2">
+        <label>Neighbourhood
+          <input id="neighbourhood" list="hoods" placeholder="Start typing, e.g. Williamsburg" autocomplete="off" required>
+          <datalist id="hoods"></datalist>
+        </label>
+        <div class="grid2 tight">
+          <label>Latitude<input id="latitude" type="number" step="any" min="-90" max="90" required></label>
+          <label>Longitude<input id="longitude" type="number" step="any" min="-180" max="180" required></label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Price and stay</legend>
+      <div class="slider"><label for="price">Price per night</label><output id="priceOut">$150</output>
+        <input id="price" type="range" min="10" max="1000" step="5" value="150"></div>
+      <div class="slider"><label for="minimum_nights">Minimum nights</label><output id="minOut">3</output>
+        <input id="minimum_nights" type="range" min="1" max="365" value="3"></div>
+      <div class="slider"><label for="availability_365">Days available per year</label><output id="availOut">180</output>
+        <input id="availability_365" type="range" min="0" max="365" value="180"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Reviews and host</legend>
+      <div class="grid3">
+        <label>Total reviews<input id="number_of_reviews" type="number" min="0" value="20" required></label>
+        <label>Reviews per month<input id="reviews_per_month" type="number" min="0" step="0.01" value="0.8" required></label>
+        <label>Host's listings<input id="calculated_host_listings_count" type="number" min="0" value="1" required></label>
+      </div>
+    </fieldset>
+
+    <p class="error" id="error" role="alert" hidden></p>
+    <div class="actions">
+      <button type="button" class="ghost" id="example">Try an example</button>
+      <button type="submit" class="primary" id="submit"><span class="label">Predict room type</span><span class="spinner"></span></button>
+    </div>
+  </form>
+
+  <aside class="card result" id="result" aria-live="polite">
+    <div class="empty" id="empty">
+      <svg viewBox="0 0 200 140" width="200"><rect x="30" y="60" width="140" height="70" rx="6" fill="#e6f1f5"/><path d="M20 62 L100 10 L180 62 Z" fill="#cfe3ee"/><rect x="88" y="90" width="24" height="40" rx="12 12 0 0" fill="#9fc6d6"/></svg>
+      <h3>Your prediction will appear here</h3>
+      <p>Fill in the form, or press “Try an example” to see how it works.</p>
+    </div>
+    <div class="answer" id="answer" hidden>
+      <div class="art" id="roomArt"></div>
+      <p class="small">The model thinks this is</p>
+      <h3 id="roomName"></h3>
+      <p class="blurb" id="roomBlurb"></p>
+      <div class="bars" id="bars"></div>
+    </div>
+  </aside>
+</main>
+
+<footer>Predictions come from a random forest model and are estimates, not guarantees.</footer>
+<script src="app.js"></script>
+</body>
+</html>
